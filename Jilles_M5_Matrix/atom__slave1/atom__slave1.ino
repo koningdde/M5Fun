@@ -6,7 +6,7 @@
 
 #define SDA_PIN 21
 #define SCL_PIN 25
-int I2C_SLAVE_ADDR = 16;
+int I2C_SLAVE_ADDR = 18; //18 For initial setup adres.
 
 const uint16_t PixelCount = 25; // this example assumes 4 pixels, making it smaller will cause a failure
 const uint8_t PixelPin = 27;  // make sure to set this to the correct pin, ignored for Esp8266
@@ -32,75 +32,74 @@ void changeAdres(int x);
 // function that executes whenever data is requested by master
 // this function is registered as an event, see setup()
 void requestEvent() {
-  if (I2C_SLAVE_ADDR == 16) {WireSlave.print("A ");}
-  else { 
-  WireSlave.print("Hello, you "); 
-  strip.SetPixelColor(x-1, hslBlue);
-  strip.SetPixelColor(x-2, black);
-  if(x == 1){strip.SetPixelColor(24, black);}
-  x+=1;
-  if(x>25){x=1;}
-  }
+  if (I2C_SLAVE_ADDR == 18) 
+  {
+    WireSlave.print("A ");    //Request for new I2C Adres when adres was 18
+  } 
+  else 
+    { 
+      WireSlave.print("Hello, you "); //Do somthing else
+      strip.SetPixelColor(x-1, hslBlue);
+      strip.SetPixelColor(x-2, black);
+      if(x == 1){strip.SetPixelColor(24, black);}
+      x+=1;
+      if(x>25){x=1;}
+    }
 }
 
 void receiveEvent(int howMany)
 {
   int x;
   char c;
-    while (1 < WireSlave.available()) // loop through all but the last byte
+    while (1 < WireSlave.available())   //Loop through all but the last byte
     {
-        c = WireSlave.read();  // receive byte as a character
-        Serial.print(c);            // print the character
-            if (c == 'A') {
-            x = WireSlave.read();   // receive byte as an integer
-            Serial.print(x);          
-            changeAdres(x);
+        c = WireSlave.read();           //Receive byte as a character
+        Serial.print(c);                //Print the character
+            if (c == 'A') {             //Receive A > Change I2C adres
+            x = WireSlave.read();       //Receive byte as an integer
+            Serial.print(x);            //Read the next byte, this will be the addres send from the master.
+            changeAdres(x);             //Change I2C Adres to received adres in EEPROM
             
             }
+      else
+      {
+        //Do some nice stuff here
+      }
         }
-    
-
-    x = WireSlave.read();   // receive byte as an integer
-    Serial.println(x);          // print the integer
+  
+    x = WireSlave.read();       //Receive byte as an integer
+    Serial.println(x);          //Print the integer
 }
 
 void changeAdres(int x) {
-  Serial.println("CHANGING");
+  Serial.println("CHANGING I2C ADDRES in eeprom");
   EEPROM.write(0, x);
   EEPROM.commit();
-  ESP.restart();
+  ESP.restart();      //Reboot ESP, need to reset the I2C bus.
   }
 
   void setup() {
-  Serial.begin(115200);           // start serial for output
-  int waittime = random(300, 1500);
-  delay(waittime);
+  Serial.begin(115200); // start serial for output
+  delay(500);           //Wait for master to boot
   EEPROM.begin(1);
   int readEprom  = EEPROM.read(0);
   Serial.print("Eprom ");
   Serial.println(readEprom);
   
-  if (readEprom >=1 || readEprom <=15 ) {
+  if (readEprom >=1 || readEprom <=16 ) {
     I2C_SLAVE_ADDR = readEprom; //Set adress to current from Eeprom
     Serial.print("I2C adres set to ");
     Serial.println(readEprom);
-    EEPROM.write(0, 16); //Reset adres for next boot
-    EEPROM.commit(); 
-    }
-    else if (readEprom == 16) 
-    {
-      // Leave as is
-      Serial.println("Leave adres to 16");
     }
     else
     {
-    Serial.println("Initial setup for empty Eeprom");
-    I2C_SLAVE_ADDR = 16;
+    Serial.println("Initial setup for empty Eeprom"); //This loop is not needed? 
+    I2C_SLAVE_ADDR = 18;
     EEPROM.write(0, I2C_SLAVE_ADDR);
     EEPROM.commit();     
     }
   
-  bool res = WireSlave.begin(SDA_PIN, SCL_PIN, I2C_SLAVE_ADDR);
+  bool res = WireSlave.begin(SDA_PIN, SCL_PIN, I2C_SLAVE_ADDR); //Start I2C with adres 
     if (!res) {
         Serial.println("I2C slave init failed");
         while(1) delay(100);
