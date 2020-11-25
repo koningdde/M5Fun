@@ -6,7 +6,7 @@
 
 #define SDA_PIN 21
 #define SCL_PIN 25
-int I2C_SLAVE_ADDR = 18; //18 For initial setup adres.
+int I2C_SLAVE_ADDR = 17; //18 For initial setup adres.
 
 const uint16_t PixelCount = 25; // this example assumes 4 pixels, making it smaller will cause a failure
 const uint8_t PixelPin = 27;  // make sure to set this to the correct pin, ignored for Esp8266
@@ -32,9 +32,9 @@ void changeAdres(int x);
 // function that executes whenever data is requested by master
 // this function is registered as an event, see setup()
 void requestEvent() {
-  if (I2C_SLAVE_ADDR == 18) 
+  if (I2C_SLAVE_ADDR == 17) 
   {
-    WireSlave.print("A ");    //Request for new I2C Adres when adres was 18
+    WireSlave.print("A ");    //Request for new I2C Adres when adres was 17
   } 
   else 
     { 
@@ -94,7 +94,7 @@ void changeAdres(int x) {
     else
     {
     Serial.println("Initial setup for empty Eeprom"); //This loop is not needed? 
-    I2C_SLAVE_ADDR = 18;
+    I2C_SLAVE_ADDR = 17;
     EEPROM.write(0, I2C_SLAVE_ADDR);
     EEPROM.commit();     
     }
