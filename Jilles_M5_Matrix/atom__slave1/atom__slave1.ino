@@ -11,6 +11,7 @@ int I2C_SLAVE_ADDR = 17; //18 For initial setup adres.
 const uint16_t PixelCount = 25; // this example assumes 4 pixels, making it smaller will cause a failure
 const uint8_t PixelPin = 27;  // make sure to set this to the correct pin, ignored for Esp8266
 int x=0;
+int picture[24];
 
 #define colorSaturation 128
 
@@ -61,9 +62,17 @@ void receiveEvent(int howMany)
             changeAdres(x);             //Change I2C Adres to received adres in EEPROM
             
             }
+            else if ( c == 'P')
+            {
+              for(int x=0;x<=25;x++)
+              {
+                picture[x] = WireSlave.read();       //Fill array
+              }
+            }
+      
       else
       {
-        //Do some nice stuff here
+        Serial.print("Unknown command");
       }
         }
   
@@ -116,6 +125,12 @@ void loop() {
   delay(1);
   WireSlave.update();
   strip.Show();
+  
+  for(int x=0; x<=25; x++)
+  {
+    Serial.print(picture[x]);
+  }
+  
   
   if (M5.BtnA.pressedFor(2000))
     {
