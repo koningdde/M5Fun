@@ -9,6 +9,7 @@
 #define I2C_SLAVE_ADDR 18
 #define MAX_SLAVE_RESPONSE_LENGTH 64
 int knownDevices[16];   //Array to store "alive" devices
+int picture[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25};
 
 // the setup routine runs once when M5Stack starts up
 void setup(){
@@ -45,6 +46,11 @@ void loop() {
                       {
                       adresSet();
                       }
+                    if (c == 'P') 
+                      {
+                      sendPicture();
+                      }                  
+                  
                     M5.Lcd.print(c);                // print the character
                 
                     }
@@ -93,3 +99,22 @@ void adresSet(){
               }
           // Adres is in use, do nothing
           } // End for loop
+  
+  void sendPicture(){
+              WirePacker packer;
+                for(int x=0; x<=25; x++)
+                {
+                // then add data the same way as you would with Wire
+                packer.write(picture[x]);
+                }
+              // after adding all data you want to send, close the packet
+              packer.end();
+
+              // now transmit the packed data
+              Wire.beginTransmission(25);
+              while (packer.available()) 
+                {    // write every packet byte
+                Wire.write(packer.read());
+                }
+              Wire.endTransmission();         // stop transmitting
+              } // End for loop
