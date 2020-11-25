@@ -116,4 +116,10 @@ void loop() {
   delay(1);
   WireSlave.update();
   strip.Show();
+  
+  if (M5.BtnA.pressedFor(2000))
+    {
+    M5.Lcd.printf("Reset I2C Bus adres");
+    changeAdres(17); //Reset I2C adres
+    }
 }
