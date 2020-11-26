@@ -102,7 +102,7 @@ void adresSet(){
               packer.end();
 
               // now transmit the packed data
-              Wire.beginTransmission(16);
+              Wire.beginTransmission(17);
               while (packer.available()) 
                 {    // write every packet byte
                 Wire.write(packer.read());
