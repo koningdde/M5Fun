@@ -9,8 +9,7 @@
 #define I2C_SLAVE_ADDR 18
 #define MAX_SLAVE_RESPONSE_LENGTH 64
 int knownDevices[16];   //Array to store "alive" devices
-//int picture[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25};
-int pircture[] = {
+int picture[] = {
 1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1
 0,1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,1,0
 0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0
@@ -127,7 +126,7 @@ void adresSet(){
     
             for(int i = 0+row; i<=80+row; i+=20) //Find first row, 2nd row, 3rd row, 4th row, 5th row
             {   //Do nothing
-                for(int x=i; x<=i+4; x++)
+                for(int x=i; x<=i+4; x++) //Find 1st, 2nd, 2rd, 4th and 5th pixel in colum
                 {
                 // then add data the same way as you would with Wire
                 packer.write(picture[x+((device-1)*5)]);  //Device number*5 to find pixels in array, first 0-4, next 20-24
