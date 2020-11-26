@@ -10,6 +10,7 @@
 #define MAX_SLAVE_RESPONSE_LENGTH 64
 int knownDevices[16];   //Array to store "alive" devices
 int picture[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25};
+int rowNumber[] = {0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3}; //Store the row where a matrix is located, first array bit is not used.
 
 // the setup routine runs once when M5Stack starts up
 void setup(){
@@ -102,10 +103,11 @@ void adresSet(){
   
   void sendPicture(int device){
             //Lets first find the row for the matrix
-             
+             int row = (rowNumber[device]*100); //Find the row where the matix is located, ingrease pixel number by row number*100
+    
               WirePacker packer;
     
-            for(int i = 0; i<=80; i+=20) //Find first row, 2nd row, 3rd row, 4th row, 5th row
+            for(int i = 0+row; i<=80+row; i+=20) //Find first row, 2nd row, 3rd row, 4th row, 5th row
             {   //Do nothing
                 for(int x=i; x<=i+4; x++)
                 {
