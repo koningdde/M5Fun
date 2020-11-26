@@ -8,6 +8,8 @@
 #define SCL_PIN 22
 #define I2C_SLAVE_ADDR 18
 #define MAX_SLAVE_RESPONSE_LENGTH 64
+#define DEBUG
+
 int knownDevices[16];   //Array to store "alive" devices
 int picture[] = {
 1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1
@@ -27,26 +29,17 @@ int picture[] = {
 0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0
 }
 
-int rowNumber[] = {0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3}; //Store the row where a matrix is located, first array bit is not used.
+int rowNumber[] = {0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3};    //Store the row where a matrix is located, first array bit is not used.
 
-// the setup routine runs once when M5Stack starts up
-void setup(){
-
-  // Initialize the M5Stack object
-  M5.begin();
-
-  /*
-    Power chip connected to gpio21, gpio22, I2C device
-    Set battery charging voltage and current
-    If used battery, please call this function in your project
-  */
-  //M5.Power.begin();
-  Serial.begin(115200);           // start serial for output
+// Starting up loop
+void setup()
+{
+  M5.begin();   // Initialize the M5Stack object
+  Serial.begin(115200);   // start serial for output
   Wire.begin(SDA_PIN, SCL_PIN);   // join i2c bus
-  
 }
 
-// the loop routine runs over and over again forever
+// The actual happening
 void loop() {
 
   for(int i=0;i<=16;i++) {
@@ -56,35 +49,36 @@ void loop() {
 
     if (success) 
             {
-                knownDevices[i] = 1;          //Store the device precense in de array
+                knownDevices[i] = 1;    //Store the device precense in de array
                 while (1 < slaveReq.available()) 
                   {
-                  char c = slaveReq.read();       // receive byte as a character
+                  char c = slaveReq.read();   // receive byte as a character
                     if (c == 'A') 
                       {
                       adresSet();
                       }
                     if (c == 'P') 
                       {
-                      sendPicture(i+1);           //Request picture for device i+1
+                      sendPicture(i+1);   //Send picture for device i+1
                       }                  
                   
-                    M5.Lcd.print(c);                // print the character
+                    M5.Lcd.print(c);    // print the received character
                 
                     }
             }
             else 
               {
               // if something went wrong, print the reason
-              knownDevices[i+1] = 0;    //Delete the device from known devices
+              knownDevices[i+1] = 0;    //Delete the device from known devices array
               M5.Lcd.print(slaveReq.lastStatusToString());
               M5.Lcd.print(" Slave number: ");
               M5.Lcd.print(i + 1);
               }
             
-       M5.Lcd.println("                     ");
+       M5.Lcd.println("                     ");   //Clear line 
   }
   
+#ifdef DEBUG
   for(x=0;x<=15;x++)
     {
     M5.Lcd.print(knownDevices[x]);    //Print array contents
@@ -93,6 +87,7 @@ void loop() {
   M5.Lcd.setCursor(0, 0, 1);
   delay(10);
 }
+#endif
 
 void adresSet(){
         for(int x=0; x<=15; x++)
