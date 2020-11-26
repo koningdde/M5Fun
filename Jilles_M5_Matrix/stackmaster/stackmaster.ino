@@ -48,7 +48,7 @@ void loop() {
                       }
                     if (c == 'P') 
                       {
-                      sendPicture();
+                      sendPicture(i+1);           //Request picture for device i+1
                       }                  
                   
                     M5.Lcd.print(c);                // print the character
@@ -100,21 +100,29 @@ void adresSet(){
           // Adres is in use, do nothing
           } // End for loop
   
-  void sendPicture(){
+  void sendPicture(int device){
+            //Lets first find the row for the matrix
+             
               WirePacker packer;
-                for(int x=0; x<=25; x++)
+    
+            for(int i = 0; i<=80; i+=20) //Find first row, 2nd row, 3rd row, 4th row, 5th row
+            {   //Do nothing
+                for(int x=i; x<=i+4; x++)
                 {
                 // then add data the same way as you would with Wire
-                packer.write(picture[x]);
-                }
+                packer.write(picture[x+((device-1)*5)]);  //Device number*5 to find pixels in array, first 0-4, next 20-24
+                }//end second for loop
+            }//end first for loop
+    
               // after adding all data you want to send, close the packet
               packer.end();
 
               // now transmit the packed data
-              Wire.beginTransmission(25);
+              Wire.beginTransmission(device);
               while (packer.available()) 
                 {    // write every packet byte
                 Wire.write(packer.read());
                 }
               Wire.endTransmission();         // stop transmitting
               } // End for loop
+
