@@ -3,6 +3,7 @@
 #include <WireSlave.h>
 #include <NeoPixelBus.h>
 #include <EEPROM.h>
+#include <M5Stack.h>
 
 #define SDA_PIN 21
 #define SCL_PIN 25
@@ -33,18 +34,21 @@ void changeAdres(int x);
 // function that executes whenever data is requested by master
 // this function is registered as an event, see setup()
 void requestEvent() {
-  if (I2C_SLAVE_ADDR == 17) 
+  if (I2C_SLAVE_ADDR == 17)
   {
     WireSlave.print("A ");    //Request for new I2C Adres when adres was 17
-  } 
-  else 
-    { 
+  }
+  else
+    {
+      WireSlave.print("P ");
+      /*
       WireSlave.print("Hello, you "); //Do somthing else
       strip.SetPixelColor(x-1, hslBlue);
       strip.SetPixelColor(x-2, black);
       if(x == 1){strip.SetPixelColor(24, black);}
       x+=1;
       if(x>25){x=1;}
+      */
     }
 }
 
@@ -60,7 +64,7 @@ void receiveEvent(int howMany)
             x = WireSlave.read();       //Receive byte as an integer
             Serial.print(x);            //Read the next byte, this will be the addres send from the master.
             changeAdres(x);             //Change I2C Adres to received adres in EEPROM
-            
+           
             }
             else if ( c == 'P')
             {
@@ -69,13 +73,13 @@ void receiveEvent(int howMany)
                 picture[x] = WireSlave.read();       //Fill array
               }
             }
-      
+     
       else
       {
         Serial.print("Unknown command");
       }
         }
-  
+ 
     x = WireSlave.read();       //Receive byte as an integer
     Serial.println(x);          //Print the integer
 }
@@ -87,33 +91,33 @@ void changeAdres(int x) {
   ESP.restart();      //Reboot ESP, need to reset the I2C bus.
   }
 
-  void setup() {
+  void setup() {    
   Serial.begin(115200); // start serial for output
   delay(500);           //Wait for master to boot
   EEPROM.begin(1);
   int readEprom  = EEPROM.read(0);
   Serial.print("Eprom ");
   Serial.println(readEprom);
-  
-  if (readEprom >=1 || readEprom <=16 ) {
+ 
+  if (readEprom >=1 || readEprom <=17 ) {
     I2C_SLAVE_ADDR = readEprom; //Set adress to current from Eeprom
     Serial.print("I2C adres set to ");
     Serial.println(readEprom);
     }
     else
     {
-    Serial.println("Initial setup for empty Eeprom"); //This loop is not needed? 
+    Serial.println("Initial setup for empty Eeprom"); //This loop is not needed?
     I2C_SLAVE_ADDR = 17;
     EEPROM.write(0, I2C_SLAVE_ADDR);
-    EEPROM.commit();     
+    EEPROM.commit();    
     }
-  
-  bool res = WireSlave.begin(SDA_PIN, SCL_PIN, I2C_SLAVE_ADDR); //Start I2C with adres 
+ 
+  bool res = WireSlave.begin(SDA_PIN, SCL_PIN, I2C_SLAVE_ADDR); //Start I2C with adres
     if (!res) {
         Serial.println("I2C slave init failed");
         while(1) delay(100);
     }
-    
+   
   strip.Begin();
   strip.Show();  
 
@@ -125,16 +129,26 @@ void loop() {
   delay(1);
   WireSlave.update();
   strip.Show();
-  
-  for(int x=0; x<=25; x++)
+ 
+  for(int x=0; x<25; x++)
   {
-    Serial.print(picture[x]);
+    if(picture[x] == 1)
+    {
+      strip.SetPixelColor(x, hslBlue);
+    }
+    else
+    {
+      strip.SetPixelColor(x, black);  
+    }
   }
-  
-  
+ 
+  Serial.println();
+ 
   if (M5.BtnA.pressedFor(2000))
     {
     M5.Lcd.printf("Reset I2C Bus adres");
     changeAdres(17); //Reset I2C adres
     }
+
+    M5.update();
 }
