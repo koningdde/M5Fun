@@ -15,7 +15,7 @@ void readFile(fs::FS &fs, const char * path) {
     //M5.Lcd.write(ch);
     i=i+1;
     //Serial.println(i);
-    pictureST[i] = ch;
+    picture[i] = ch;
   }
 
   #ifdef DEBUG
@@ -24,13 +24,13 @@ void readFile(fs::FS &fs, const char * path) {
     Serial.print("Index: ");
     Serial.print(x);
     Serial.print(" ");
-    Serial.println(pictureST[x]);
+    Serial.println(picture[x]);
   }
   #endif
 
   for(int x=0;x<=1299; x++)
   {
-    pictureST[x] = map(pictureST[x],0,255,0,128);
+    picture[x] = map(picture[x],0,255,0,128);
   }
 
   #ifdef DEBUG
@@ -38,7 +38,7 @@ void readFile(fs::FS &fs, const char * path) {
     Serial.print("Index: ");
     Serial.print(x);
     Serial.print(" ");
-    Serial.println(pictureST[x]);
+    Serial.println(picture[x]);
   }
   #endif
   

@@ -5,14 +5,15 @@
 #include <EEPROM.h>
 #include <M5Stack.h>
 
+#define DEBUG
 #define SDA_PIN 21
 #define SCL_PIN 25
-int I2C_SLAVE_ADDR = 17; //18 For initial setup adres.
+int I2C_SLAVE_ADDR = 17; //17 For initial setup adres.
 
 const uint16_t PixelCount = 25; // this example assumes 4 pixels, making it smaller will cause a failure
 const uint8_t PixelPin = 27;  // make sure to set this to the correct pin, ignored for Esp8266
 int x=0;
-int picture[24];
+int picture[75];
 
 #define colorSaturation 128
 
@@ -68,7 +69,7 @@ void receiveEvent(int howMany)
             }
             else if ( c == 'P')
             {
-              for(int x=0;x<=25;x++)
+              for(int x=0;x<=75;x++)
               {
                 picture[x] = WireSlave.read();       //Fill array
               }
@@ -107,7 +108,7 @@ void changeAdres(int x) {
     else
     {
     Serial.println("Initial setup for empty Eeprom"); //This loop is not needed?
-    I2C_SLAVE_ADDR = 17;
+    I2C_SLAVE_ADDR = 13;
     EEPROM.write(0, I2C_SLAVE_ADDR);
     EEPROM.commit();    
     }
@@ -129,18 +130,23 @@ void loop() {
   delay(1);
   WireSlave.update();
   strip.Show();
- 
-  for(int x=0; x<25; x++)
+  Serial.println("PICTURE: ");
+  for(int x=0; x<75; x++)
   {
-    if(picture[x] == 1)
-    {
-      strip.SetPixelColor(x, hslBlue);
-    }
-    else
-    {
-      strip.SetPixelColor(x, black);  
-    }
+    Serial.print("Index: ");
+    Serial.print(x);
+    Serial.print(" ");
+    Serial.println(picture[x]);
   }
+
+ int led = 0;
+ for (int x=0; x<=72; x+=3)
+ {    
+      RgbColor color(picture[x+2],picture[x+1],picture[x]); //RedGreenBlue
+      strip.SetPixelColor(led, color);
+      led = led + 1;
+ }
+
  
   Serial.println();
  

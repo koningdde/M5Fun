@@ -1,12 +1,12 @@
 int i = 0;
-int pictureST[1300];
+int picture[1300];
 
 #include <Arduino.h>
 #include <M5Stack.h>
 #include <Wire.h>
 #include <WireSlaveRequest.h>
 #include <WirePacker.h>
-#define DEBUG
+//#define DEBUG
 #include "sdFunctions.h"
 
 #define SDA_PIN 21
@@ -14,32 +14,9 @@ int pictureST[1300];
 #define I2C_SLAVE_ADDR 18
 #define MAX_SLAVE_RESPONSE_LENGTH 64
 
-
 int knownDevices[17];   //Array to store "alive" devices
-int picture[] = {
-1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,
-0,1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,1,0,
-0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,
-0,0,0,1,0,0,1,0,0,0,0,0,0,1,0,0,1,0,0,0,
-0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,
-0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,
-0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,
-0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,
-0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,
-0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,
-0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,
-0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,
-0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,
-0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,
-0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,
-0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0
-};
 
-int rowNumber[] = {0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3};    //Store the row where a matrix is located, first array bit is not used.
+int indexNumber[] = {0,1195,1210,1225,1240,895,910,925,940,595,610,625,640,295,310,325,340};    //Store the first bit for the display
 void sendPicture(int device);
 void sendRandom(int device);
 void adresSet();
@@ -125,7 +102,8 @@ void adresSet(){
               WirePacker packer;
               // then add data the same way as you would with Wire
               packer.write('A');
-              packer.write(x+1);
+              packer.write(4);
+              //packer.write(x+1);
               // after adding all data you want to send, close the packet
               packer.end();
 
@@ -143,17 +121,21 @@ void adresSet(){
 }
 
   void sendPicture(int device){
-            //Lets first find the row for the matrix            
-             int row = (rowNumber[device]*100); //Find the row where the matix is located, ingrease pixel number by row number*100
+            //Lets first find the row for the matrix     
+             int row = indexNumber[device]; //Find the row where the matix is located, ingrease pixel number by row number*100
               WirePacker packer;
               packer.write('P');
               
-            for(int i = 0+row; i<=80+row; i+=20) //Find first row, 2nd row, 3rd row, 4th row, 5th row
-            {   //Do nothing
-                for(int x=i; x<=i+4; x++) //Find 1st, 2nd, 2rd, 4th and 5th pixel in colum
+            //for(int i = row; i>=(row-240); i=i-60) //Find first row, 2nd row, 3rd row, 4th row, 5th row
+            for(int i = row; i>=(row-240); i=i-60)
+            { 
+              Serial.print("ROW: ");  
+              Serial.println(i);
+                for(int x=i; x<=(i+14); x++) //Find 1st, 2nd, 2rd, 4th and 5th pixel in colum
                 {
-                // then add data the same way as you would with Wire
-                packer.write(picture[x+((device-1)*5)]);  //Device number*5 to find pixels in array, first 0-4, next 20-24
+                Serial.print("COL: ");  
+                Serial.println(x);
+                packer.write(picture[x]);  //Device number*5 to find pixels in array, first 0-4, next 20-24
                 }//end second for loop
             }//end first for loop
     
@@ -161,7 +143,7 @@ void adresSet(){
               packer.end();
 
               // now transmit the packed data
-              Wire.beginTransmission(device);
+             Wire.beginTransmission(device);
               while (packer.available()) 
                 {    // write every packet byte
                 Wire.write(packer.read());
@@ -174,10 +156,10 @@ void adresSet(){
               WirePacker packer;
               packer.write('P');
               
-            for(int i = 0; i<=24; i++) //Find first row, 2nd row, 3rd row, 4th row, 5th row
+            for(int i = 0; i<=75; i++) //Find first row, 2nd row, 3rd row, 4th row, 5th row
                 {
                 
-                packer.write(random(0,2));  //Device number*5 to find pixels in array, first 0-4, next 20-24
+                packer.write(random(0,128));  //Device number*5 to find pixels in array, first 0-4, next 20-24
                 }//end second for loop
     
               // after adding all data you want to send, close the packet
