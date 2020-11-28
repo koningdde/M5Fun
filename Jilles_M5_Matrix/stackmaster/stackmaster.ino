@@ -1,14 +1,19 @@
+int i = 0;
+int pictureST[1300];
+
 #include <Arduino.h>
 #include <M5Stack.h>
 #include <Wire.h>
 #include <WireSlaveRequest.h>
 #include <WirePacker.h>
+#define DEBUG
+#include "sdFunctions.h"
 
 #define SDA_PIN 21
 #define SCL_PIN 22
 #define I2C_SLAVE_ADDR 18
 #define MAX_SLAVE_RESPONSE_LENGTH 64
-#define DEBUG
+
 
 int knownDevices[17];   //Array to store "alive" devices
 int picture[] = {
@@ -46,6 +51,7 @@ void setup()
   M5.begin();   // Initialize the M5Stack object
   Serial.begin(115200);   // start serial for output
   Wire.begin(SDA_PIN, SCL_PIN);   // join i2c bus
+  readFile(SD, "/2.bmp");
 }
 
 // The actual happening
