@@ -1,3 +1,4 @@
+//29-11-2020
 #include <Arduino.h>
 #include <Wire.h>
 #include <WireSlave.h>
@@ -5,7 +6,7 @@
 #include <EEPROM.h>
 #include <M5Stack.h>
 
-#define DEBUG
+//#define DEBUG
 #define SDA_PIN 21
 #define SCL_PIN 25
 int I2C_SLAVE_ADDR = 17; //17 For initial setup adres.
@@ -14,6 +15,7 @@ const uint16_t PixelCount = 25; // this example assumes 4 pixels, making it smal
 const uint8_t PixelPin = 27;  // make sure to set this to the correct pin, ignored for Esp8266
 int x=0;
 int picture[75];
+bool newData = false;
 
 #define colorSaturation 128
 
@@ -42,14 +44,6 @@ void requestEvent() {
   else
     {
       WireSlave.print("P ");
-      /*
-      WireSlave.print("Hello, you "); //Do somthing else
-      strip.SetPixelColor(x-1, hslBlue);
-      strip.SetPixelColor(x-2, black);
-      if(x == 1){strip.SetPixelColor(24, black);}
-      x+=1;
-      if(x>25){x=1;}
-      */
     }
 }
 
@@ -73,6 +67,7 @@ void receiveEvent(int howMany)
               {
                 picture[x] = WireSlave.read();       //Fill array
               }
+              newData = true;
             }
      
       else
@@ -129,7 +124,9 @@ void changeAdres(int x) {
 void loop() {
   delay(1);
   WireSlave.update();
-  strip.Show();
+  
+
+  #ifdef DEBUG
   Serial.println("PICTURE: ");
   for(int x=0; x<75; x++)
   {
@@ -138,7 +135,9 @@ void loop() {
     Serial.print(" ");
     Serial.println(picture[x]);
   }
+  #endif
 
+  if(newData == true){
  int led = 0;
  for (int x=0; x<=72; x+=3)
  {    
@@ -146,10 +145,12 @@ void loop() {
       strip.SetPixelColor(led, color);
       led = led + 1;
  }
-
+ newData = false;
+ Serial.println("New patern");
+ strip.Show();
+  }
  
-  Serial.println();
- 
+   
   if (M5.BtnA.pressedFor(2000))
     {
     M5.Lcd.printf("Reset I2C Bus adres");

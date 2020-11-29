@@ -1,5 +1,6 @@
-int i = 0;
+//29-11-2020
 int picture[1300];
+int colorSaturation = 68;
 
 #include <Arduino.h>
 #include <M5Stack.h>
@@ -7,6 +8,8 @@ int picture[1300];
 #include <WireSlaveRequest.h>
 #include <WirePacker.h>
 //#define DEBUG
+String fileNames[20];
+int w = 0;
 #include "sdFunctions.h"
 
 #define SDA_PIN 21
@@ -19,8 +22,12 @@ int knownDevices[17];   //Array to store "alive" devices
 int indexNumber[] = {0,1195,1210,1225,1240,895,910,925,940,595,610,625,640,295,310,325,340};    //Store the first bit for the display
 void sendPicture(int device);
 void sendRandom(int device);
+void changePic();
+int actualPic=0;
+int newPatern[16]; //Look for change in patern
+int numberOfPics = 0; //Number of valid pictures on SD
 void adresSet();
-int patern = 0;
+int currentFile = 255; //Placeholder fot current BMP file
 
 // Starting up loop
 void setup()
@@ -28,7 +35,31 @@ void setup()
   M5.begin();   // Initialize the M5Stack object
   Serial.begin(115200);   // start serial for output
   Wire.begin(SDA_PIN, SCL_PIN);   // join i2c bus
-  readFile(SD, "/2.bmp");
+    M5.Lcd.setCursor(40, 220);
+    M5.Lcd.print("Change pic: ");    
+    M5.Lcd.setCursor(240, 220);
+    M5.Lcd.print("Bright: ");    
+    M5.Lcd.print(colorSaturation);    
+    M5.Lcd.print("  ");
+    M5.Lcd.setCursor(0, 0, 1);    
+
+  listDir(SD, "/", 0);
+  Serial.println("Bitmap list");
+  
+  for(int i = 0; i<20; i++)
+  {
+    if(fileNames[i] > " ")
+    {
+    numberOfPics+=1;
+    Serial.println(fileNames[i]);
+    }
+
+  }
+    Serial.print(numberOfPics);
+    Serial.println(" .BMP Pictures found");  
+  
+  changePic();
+  
 }
 
 // The actual happening
@@ -52,9 +83,11 @@ void loop() {
                       }
                     if (c == 'P') 
                       {
-                      if (patern == 0){sendPicture(i+1);}
-                      if (patern == 1){sendRandom(i+1);}
-                      M5.lcd.print("Request picture");
+                        M5.lcd.print("Request picture");
+                        if (newPatern[i] == 1){
+                          sendPicture(i+1);
+                          newPatern[i] = 0;
+                        }
                       }                  
                   
                     //None
@@ -78,18 +111,25 @@ void loop() {
     {
     M5.Lcd.print(knownDevices[x]);    //Print array contents
     }
-  #endif
+#endif
   
-  
-  M5.Lcd.setCursor(0, 0, 1);
-  delay(10);
-
   if (M5.BtnA.wasPressed())
     {
-    patern = patern + 1;
-    if(patern == 2){patern = 0;}
+    changePic();
     }
     
+   if (M5.BtnC.wasPressed())
+    {
+    colorSaturation = colorSaturation - 20;
+    if(colorSaturation < 20){colorSaturation = 128;}
+    M5.Lcd.setCursor(240, 220);
+    M5.Lcd.print("Bright: ");    //Print array contents
+    M5.Lcd.print(colorSaturation);    //Print array contents
+    M5.Lcd.print("  ");    //Print array contents
+    }
+
+  M5.Lcd.setCursor(0, 0, 1);
+  delay(10);
   M5.update();
 }
 
@@ -102,8 +142,7 @@ void adresSet(){
               WirePacker packer;
               // then add data the same way as you would with Wire
               packer.write('A');
-              packer.write(4);
-              //packer.write(x+1);
+              packer.write(x+1);
               // after adding all data you want to send, close the packet
               packer.end();
 
@@ -120,7 +159,7 @@ void adresSet(){
           } // End for loop
 }
 
-  void sendPicture(int device){
+void sendPicture(int device){
             //Lets first find the row for the matrix     
              int row = indexNumber[device]; //Find the row where the matix is located, ingrease pixel number by row number*100
               WirePacker packer;
@@ -129,12 +168,18 @@ void adresSet(){
             //for(int i = row; i>=(row-240); i=i-60) //Find first row, 2nd row, 3rd row, 4th row, 5th row
             for(int i = row; i>=(row-240); i=i-60)
             { 
+              //Do Nothing
+              #ifdef DEBUG
               Serial.print("ROW: ");  
               Serial.println(i);
+              #endif
+              
                 for(int x=i; x<=(i+14); x++) //Find 1st, 2nd, 2rd, 4th and 5th pixel in colum
                 {
+                #ifdef DEBUG
                 Serial.print("COL: ");  
                 Serial.println(x);
+                #endif
                 packer.write(picture[x]);  //Device number*5 to find pixels in array, first 0-4, next 20-24
                 }//end second for loop
             }//end first for loop
@@ -151,25 +196,14 @@ void adresSet(){
               Wire.endTransmission();         // stop transmitting
     } // End function
 
- void sendRandom(int device){
-            //Lets first find the row for the matrix            
-              WirePacker packer;
-              packer.write('P');
-              
-            for(int i = 0; i<=75; i++) //Find first row, 2nd row, 3rd row, 4th row, 5th row
-                {
-                
-                packer.write(random(0,128));  //Device number*5 to find pixels in array, first 0-4, next 20-24
-                }//end second for loop
-    
-              // after adding all data you want to send, close the packet
-              packer.end();
-
-              // now transmit the packed data
-              Wire.beginTransmission(device);
-              while (packer.available()) 
-                {    // write every packet byte
-                Wire.write(packer.read());
-                }
-              Wire.endTransmission();         // stop transmitting
-} // End random
+void changePic(){
+    int str_len = fileNames[actualPic].length() + 1; 
+    char char_array[str_len];
+      if(str_len>2){ 
+      fileNames[actualPic].toCharArray(char_array, str_len);
+      readFile(SD, char_array); //readFile(SD, "/2.BMP"); 
+      for(int i = 0; i<16; i++){newPatern[i] = 1;} 
+      }
+      actualPic+=1;
+      if(actualPic == numberOfPics){actualPic = 0;}
+}
