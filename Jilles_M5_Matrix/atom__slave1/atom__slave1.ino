@@ -1,4 +1,5 @@
-//29-11-2020
+//Load this sketch to the ATOMS, no need to define the I2C adres.
+
 #include <Arduino.h>
 #include <Wire.h>
 #include <WireSlave.h>
@@ -7,10 +8,12 @@
 #include <M5Stack.h>
 
 //#define DEBUG
+
 #define SDA_PIN 21
 #define SCL_PIN 25
 int I2C_SLAVE_ADDR = 17; //17 For initial setup adres.
 
+//Setup pixel matrix
 const uint16_t PixelCount = 25; // this example assumes 4 pixels, making it smaller will cause a failure
 const uint8_t PixelPin = 27;  // make sure to set this to the correct pin, ignored for Esp8266
 int x=0;
@@ -103,7 +106,7 @@ void changeAdres(int x) {
     else
     {
     Serial.println("Initial setup for empty Eeprom"); //This loop is not needed?
-    I2C_SLAVE_ADDR = 13;
+    I2C_SLAVE_ADDR = 17;
     EEPROM.write(0, I2C_SLAVE_ADDR);
     EEPROM.commit();    
     }
