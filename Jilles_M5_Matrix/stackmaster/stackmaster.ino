@@ -28,6 +28,11 @@ int newPatern[16]; //Look for change in patern
 int numberOfPics = 0; //Number of valid pictures on SD
 void adresSet();
 int currentFile = 255; //Placeholder fot current BMP file
+bool autoChange = false;
+
+long previousMillis = 0; 
+long interval = 2000;
+unsigned long currentMillis;
 
 // Starting up loop
 void setup()
@@ -35,13 +40,15 @@ void setup()
   M5.begin();   // Initialize the M5Stack object
   Serial.begin(115200);   // start serial for output
   Wire.begin(SDA_PIN, SCL_PIN);   // join i2c bus
-    M5.Lcd.setCursor(40, 220);
-    M5.Lcd.print("Change pic: ");    
-    M5.Lcd.setCursor(240, 220);
+  //M5.Lcd.setTextColor(0xffff);
+    M5.Lcd.setCursor(35, 220);
+    M5.Lcd.print("Change picture ");
+    M5.Lcd.setCursor(135, 220);
+    M5.Lcd.print("Autochange off"); 
+    M5.Lcd.setCursor(230, 220);
     M5.Lcd.print("Bright: ");    
     M5.Lcd.print(colorSaturation);    
-    M5.Lcd.print("  ");
-    M5.Lcd.setCursor(0, 0, 1);    
+    M5.Lcd.print("  "); 
 
   listDir(SD, "/", 0);
   Serial.println("Bitmap list");
@@ -57,7 +64,20 @@ void setup()
   }
     Serial.print(numberOfPics);
     Serial.println(" .BMP Pictures found");  
-  
+    M5.Lcd.setCursor(0, 136);
+    M5.Lcd.print(numberOfPics);
+    M5.Lcd.print(" Pictures found on SD card");
+    M5.Lcd.setCursor(0, 154);
+    M5.Lcd.print("Interval: "); 
+    M5.Lcd.print(interval);
+    M5.Lcd.print("mS     ");
+   // M5.Lcd.setTextColor(0xff80);
+    M5.Lcd.setCursor(80, 180,4);
+    M5.Lcd.print("Jilles M5 Matrix");
+   // M5.Lcd.setTextColor(0xffff); 
+    
+    M5.Lcd.setCursor(0, 0, 1);
+    
   changePic();
   
 }
@@ -115,19 +135,49 @@ void loop() {
   
   if (M5.BtnA.wasPressed())
     {
-    changePic();
+    if(autoChange == false){changePic();}
+    if(autoChange == true)
+      {
+        interval = interval + 2000;
+        M5.Lcd.setCursor(0, 154);
+        M5.Lcd.print("Interval: "); 
+        M5.Lcd.print(interval);
+        M5.Lcd.print("mS     ");
+      }
+    }
+
+  if (M5.BtnB.wasPressed())
+    {
+    autoChange = !autoChange;
+    M5.Lcd.setCursor(35, 220);
+    if(autoChange == true){M5.Lcd.print("Change interval ");}
+    if(autoChange == false){M5.Lcd.print("Change picture  ");}
+    M5.Lcd.setCursor(135, 220);
+    if(autoChange == false){M5.Lcd.print("Autochange off");}
+    if(autoChange == true){M5.Lcd.print("Autochange on ");}
+    M5.Lcd.setCursor(0, 0);
     }
     
    if (M5.BtnC.wasPressed())
     {
     colorSaturation = colorSaturation - 20;
     if(colorSaturation < 20){colorSaturation = 128;}
-    M5.Lcd.setCursor(240, 220);
+    M5.Lcd.setCursor(230, 220);
     M5.Lcd.print("Bright: ");    //Print array contents
     M5.Lcd.print(colorSaturation);    //Print array contents
     M5.Lcd.print("  ");    //Print array contents
+    if (actualPic >0) {actualPic-=1;}
+    else {actualPic = numberOfPics-1;}
+    changePic();
     }
 
+  currentMillis = millis();
+  if(currentMillis - previousMillis > interval) 
+  {
+    previousMillis = currentMillis;
+    if(autoChange == true){changePic();} 
+  }
+  
   M5.Lcd.setCursor(0, 0, 1);
   delay(10);
   M5.update();
@@ -206,4 +256,8 @@ void changePic(){
       }
       actualPic+=1;
       if(actualPic == numberOfPics){actualPic = 0;}
+      M5.Lcd.setCursor(0, 144);
+      M5.Lcd.print("Showing picture: "); 
+      M5.Lcd.print(char_array);
+      M5.Lcd.setCursor(0, 0, 1);
 }
